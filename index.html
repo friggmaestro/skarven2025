@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Föglölinjen 2025</title>
+    <meta name="description" content="Tidtabell för Föglölinjen 2025">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/2563eb/ffffff/png?text=F%C3%B6gl%C3%B6">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'media', 
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+                900: '#1e3a8a',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+    </style>
+
+    <!-- Import Map for External Modules -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
+  }
+}
+</script>
+    <!-- Babel for in-browser compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div id="root"></div>
+
+    <!-- MAIN APP SCRIPT -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { Clock, Calendar, Anchor, Ship, AlertCircle, ChevronLeft, ChevronRight, CalendarRange, WifiOff, Circle, MapPin } from 'lucide-react';
+
+        // --- DATA SECTION ---
+
+        const SUNDAY_DEGERBY_LOW = ['06:30','10:10','12:00','15:05','16:15','18:30','21:05','23:30'];
+        const SUNDAY_SVINO_LOW = ['07:10','10:45','13:15','15:40','16:55','19:05','21:40','00:05'];
+
+        const TIMETABLE = {
+            'degerby-svino': {
+                name: "Från Degerby",
+                seasons: {
+                low: { 
+                    1: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    2: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    3: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    4: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    5: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    6: ['06:15','08:55','10:10','12:00','15:05','16:15','17:30','21:05','23:30'], 
+                    0: SUNDAY_DEGERBY_LOW 
+                },
+                high: { 
+                    1: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    2: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    3: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    4: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    5: ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    6: ['06:15','07:45','08:55','10:10','12:00','15:05','16:15','17:30','19:55','21:05','23:30'], 
+                    0: ['06:30','10:10','12:00','13:55','15:05','16:15','18:30','19:55','21:05','23:30'] 
+                }
+                }
+            },
+            'svino-degerby': {
+                name: "Från Svinö",
+                seasons: {
+                low: { 
+                    1: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    2: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    3: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    4: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    5: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    6: ['06:50','09:30','10:45','13:15','15:40','16:55','19:05','21:40','00:05'], 
+                    0: SUNDAY_SVINO_LOW 
+                },
+                high: { 
+                    1: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    2: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    3: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    4: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    5: ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    6: ['06:50','08:20','09:30','10:45','13:15','15:40','16:55','18:05','20:30','21:40','00:05'], 
+                    0: ['07:10','10:45','13:15','14:30','15:40','16:55','19:05','20:30','21:40','00:05'] 
+                }
+                }
+            }
+        };
+
+        const fromTime = (schedule, time) => schedule.filter(t => t >= time);
+
+        const EXCEPTIONS = {
+            '2025-01-01': { description: 'Söndagsturlista som börjar kl. 10:10 från Degerby.', 'degerby-svino': fromTime(SUNDAY_DEGERBY_LOW, '10:10'), 'svino-degerby': fromTime(SUNDAY_SVINO_LOW, '10:45') },
+            '2025-01-06': { description: 'Söndags turlista.', 'degerby-svino': SUNDAY_DEGERBY_LOW, 'svino-degerby': SUNDAY_SVINO_LOW },
+            '2025-04-18': { description: 'Söndags turlista.', 'degerby-svino': SUNDAY_DEGERBY_LOW, 'svino-degerby': SUNDAY_SVINO_LOW },
+            '2025-04-21': { description: 'Söndags turlista.', 'degerby-svino': SUNDAY_DEGERBY_LOW, 'svino-degerby': SUNDAY_SVINO_LOW },
+            '2025-11-01': { description: 'Söndags turlista.', 'degerby-svino': SUNDAY_DEGERBY_LOW, 'svino-degerby': SUNDAY_SVINO_LOW },
+            '2025-12-06': { description: 'Söndags turlista.', 'degerby-svino': SUNDAY_DEGERBY_LOW, 'svino-degerby': SUNDAY_SVINO_LOW },
+            '2025-12-24': { description: 'Efter kl. 16:55 körs endast 22:25 från Degerby samt 23:00 från Svinö.', 'degerby-svino': ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15', '22:25'], 'svino-degerby': ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55', '23:00'] },
+            '2025-12-25': { description: 'Söndagsturlista, som börjar klockan 12:00 från Degerby.', 'degerby-svino': fromTime(SUNDAY_DEGERBY_LOW, '12:00'), 'svino-degerby': fromTime(SUNDAY_SVINO_LOW, '13:15') },
+            '2025-12-26': { description: 'Söndagsturlista som börjar klockan 10:10 från Degerby.', 'degerby-svino': fromTime(SUNDAY_DEGERBY_LOW, '10:10'), 'svino-degerby': fromTime(SUNDAY_SVINO_LOW, '10:45') },
+            '2025-12-31': { description: 'Trafiken avslutas klockan 20:30 från Svinö.', 'degerby-svino': ['06:30','07:45','08:55','10:10','12:00','13:55','15:05','16:15','17:30','19:55'], 'svino-degerby': ['07:10','08:20','09:30','10:45','13:15','14:30','15:40','16:55','18:05','20:30'] },
+            '2026-01-01': { description: 'Söndagstrafik som börjar klockan 10:10 från Degerby.', 'degerby-svino': fromTime(SUNDAY_DEGERBY_LOW, '10:10'), 'svino-degerby': fromTime(SUNDAY_SVINO_LOW, '10:45') }
+        };
+
+        // --- UTILS SECTION ---
+
+        const calculateArrivalTime = (time) => {
+            if (!time) return '';
+            const [hours, minutes] = time.split(':').map(Number);
+            const date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            date.setMinutes(date.getMinutes() + 30);
+            return date.toTimeString().slice(0, 5);
+        };
+
+        const getCurrentSeason = (now) => {
+            const currentYear = now.getFullYear();
+            const date = new Date(currentYear, now.getMonth(), now.getDate());
+            const highStart = new Date(currentYear, 5, 1);
+            const highEnd = new Date(currentYear, 7, 31);
+            if (date >= highStart && date <= highEnd) {
+                return { key: 'high', name: 'Sommartidtabell' };
+            }
+            return { key: 'low', name: 'Vintertidtabell' };
+        };
+
+        const getDeparturesForDate = (routeKey, date) => {
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (EXCEPTIONS[dateKey]) {
+                const dayData = EXCEPTIONS[dateKey];
+                return routeKey === 'degerby-svino' ? dayData['degerby-svino'] : dayData['svino-degerby'];
+            }
+            const routeData = TIMETABLE[routeKey];
+            const seasonKey = getCurrentSeason(date).key;
+            const dayOfWeek = date.getDay();
+            return routeData.seasons[seasonKey]?.[dayOfWeek] || [];
+        };
+
+        const getUpcomingDepartures = (routeKey, now) => {
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const departuresToday = getDeparturesForDate(routeKey, today);
+            const currentTime = now.toTimeString().slice(0, 5);
+            return departuresToday.filter(time => time > currentTime);
+        };
+
+        const formatDatePretty = (date) => {
+            const dayName = date.toLocaleDateString('sv-SE', { weekday: 'long' });
+            const formattedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+            return `${formattedDay}, ${date.getDate()} ${date.toLocaleDateString('sv-SE', { month: 'long' })}`;
+        };
+
+        // --- COMPONENTS SECTION ---
+
+        const DepartureCard = ({ time, isNext, label }) => {
+            const arrivalTime = calculateArrivalTime(time);
+            return (
+                <div className={`relative overflow-hidden p-4 rounded-xl flex justify-between items-center transition-all duration-300 shadow-sm gap-2 ${isNext ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 shadow-blue-200 dark:shadow-none' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700'}`}>
+                    {isNext && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
+                    <div className="flex flex-col min-w-[70px]">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                            <Circle className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Avgång</span>
+                            {label && <span className="ml-1 text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/40 px-1.5 rounded-full uppercase tracking-wider">{label}</span>}
+                        </div>
+                        <span className={`text-2xl font-bold tracking-tight ${isNext ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>{time}</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center px-2 pt-1 min-w-[60px]">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap mb-1 ${isNext ? 'text-blue-600/70 dark:text-blue-300/70' : 'text-gray-400 dark:text-gray-500'}`}>30 min</span>
+                        <div className={`h-[2px] w-full rounded-full ${isNext ? 'bg-blue-400 dark:bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+                    </div>
+                    <div className="flex flex-col items-end min-w-[70px]">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ankomst</span>
+                            <MapPin className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                        </div>
+                        <span className={`text-xl font-semibold ${isNext ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>{arrivalTime}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const RouteColumn = ({ title, departures, emptyMessage }) => {
+            return (
+                <div className="flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-1 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        {title}
+                    </h3>
+                    <div className="flex-1 space-y-3">
+                        {departures.length > 0 ? (
+                            departures.map((dep, idx) => <DepartureCard key={`${dep.time}-${idx}`} time={dep.time} isNext={dep.isNext} label={dep.label} />)
+                        ) : (
+                            <div className="h-32 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-700">
+                                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{emptyMessage || "Inga avgångar"}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- APP COMPONENT ---
+
+        function App() {
+            const [now, setNow] = useState(new Date());
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [activeTab, setActiveTab] = useState('next');
+            const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+            useEffect(() => {
+                const timer = setInterval(() => setNow(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                const handleOnline = () => setIsOffline(false);
+                const handleOffline = () => setIsOffline(true);
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
+
+            const season = getCurrentSeason(now);
+            const timeString = now.toTimeString().slice(0, 5);
+            const dateString = formatDatePretty(now);
+
+            const renderNext = () => {
+                const findNext = (routeKey) => {
+                    const todayDeps = getUpcomingDepartures(routeKey, now);
+                    if (todayDeps.length > 0) return { time: todayDeps[0], date: now, label: undefined };
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowDeps = getDeparturesForDate(routeKey, tomorrow);
+                    if (tomorrowDeps.length > 0) return { time: tomorrowDeps[0], date: tomorrow, label: 'Imorgon' };
+                    return null;
+                };
+
+                const nextDegerby = findNext('degerby-svino');
+                const nextSvino = findNext('svino-degerby');
+                const createDepartureData = (data) => !data ? [] : [{ time: data.time, arrivalTime: '', isNext: true, label: data.label }];
+
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const exception = EXCEPTIONS[dateKey];
+
+                return (
+                    <div className="animate-fade-in">
+                        {exception && (
+                            <div className="bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 p-4 rounded-xl mb-6 border border-amber-200 dark:border-amber-800/50 flex gap-3 items-start shadow-sm">
+                                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold text-sm mb-1 text-amber-800 dark:text-amber-300">Avvikande tidtabell idag</p>
+                                    <p className="text-sm leading-relaxed opacity-90">{exception.description || "Trafiken körs enligt avvikande tidtabell."}</p>
+                                </div>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <RouteColumn title={TIMETABLE['degerby-svino'].name} departures={createDepartureData(nextDegerby)} emptyMessage="Inga fler avgångar hittades" />
+                            <RouteColumn title={TIMETABLE['svino-degerby'].name} departures={createDepartureData(nextSvino)} emptyMessage="Inga fler avgångar hittades" />
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderDayView = () => {
+                const isToday = selectedDate.toDateString() === now.toDateString();
+                const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+                const exception = EXCEPTIONS[dateKey];
+
+                const handlePrevDay = () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d); };
+                const handleNextDay = () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d); };
+                const handleDateInput = (e) => { const val = e.target.value; if (val) { const [y, m, d] = val.split('-').map(Number); setSelectedDate(new Date(y, m - 1, d)); }};
+                const resetToToday = () => setSelectedDate(new Date());
+
+                const getRouteData = (key) => {
+                    const allDeps = getDeparturesForDate(key, selectedDate);
+                    let nextTime;
+                    if (isToday) { const upcoming = getUpcomingDepartures(key, now); nextTime = upcoming[0]; }
+                    return allDeps.map(time => ({ time, arrivalTime: '', isNext: time === nextTime }));
+                };
+
+                const dateInputValue = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+                const displayDate = selectedDate.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+                const capitalizedDate = displayDate.charAt(0).toUpperCase() + displayDate.slice(1);
+
+                return (
+                    <div className="h-[calc(100vh-320px)] md:h-auto overflow-y-auto no-scrollbar pb-10">
+                        <div className="flex items-center justify-between mb-6 bg-gray-50 dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700 select-none">
+                            <button onClick={handlePrevDay} className="p-3 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-300" aria-label="Föregående dag"><ChevronLeft className="w-5 h-5" /></button>
+                            <div className="flex flex-col items-center relative group">
+                                <label className="text-base sm:text-lg font-bold text-gray-800 dark:text-gray-100 capitalize cursor-pointer flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                    {isToday ? 'Idag' : capitalizedDate}
+                                    <input type="date" value={dateInputValue} onChange={handleDateInput} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                                </label>
+                                {!isToday && <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{selectedDate.toLocaleDateString('sv-SE')}</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {!isToday && <button onClick={resetToToday} className="hidden sm:block px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors">Gå till idag</button>}
+                                <button onClick={handleNextDay} className="p-3 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-300" aria-label="Nästa dag"><ChevronRight className="w-5 h-5" /></button>
+                            </div>
+                        </div>
+                        {exception && (
+                            <div className="bg-amber-50 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 p-4 rounded-xl mb-6 border border-amber-200 dark:border-amber-800/50 flex gap-3 items-start shadow-sm animate-fade-in">
+                                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-bold text-sm mb-1 text-amber-800 dark:text-amber-300">Avvikande tidtabell</p>
+                                    <p className="text-sm leading-relaxed opacity-90">{exception.description || "Trafiken körs enligt avvikande tidtabell detta datum."}</p>
+                                </div>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
+                            <RouteColumn title={TIMETABLE['degerby-svino'].name} departures={getRouteData('degerby-svino')} />
+                            <RouteColumn title={TIMETABLE['svino-degerby'].name} departures={getRouteData('svino-degerby')} />
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderWeek = () => {
+                const weekStructure = [{ title: 'Vardagar (Mån-Fre)', dayOfWeek: 1 }, { title: 'Lördag', dayOfWeek: 6 }, { title: 'Söndag', dayOfWeek: 0 }];
+                const currentSeasonKey = season.key;
+                return (
+                    <div className="space-y-10 pb-10">
+                        {weekStructure.map(group => {
+                            const degerbyDeps = TIMETABLE['degerby-svino'].seasons[currentSeasonKey][group.dayOfWeek] || [];
+                            const svinoDeps = TIMETABLE['svino-degerby'].seasons[currentSeasonKey][group.dayOfWeek] || [];
+                            return (
+                                <div key={group.title} className="bg-gray-50 dark:bg-gray-800/30 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+                                    <h3 className="text-lg font-bold text-center mb-6 text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2"><Calendar className="w-5 h-5" />{group.title}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div><h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center uppercase">Från Degerby</h4><div className="flex flex-wrap gap-2 justify-center">{degerbyDeps.map(t => <span key={t} className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded shadow-sm text-sm font-medium border border-gray-100 dark:border-gray-600">{t}</span>)}</div></div>
+                                        <div><h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 text-center uppercase">Från Svinö</h4><div className="flex flex-wrap gap-2 justify-center">{svinoDeps.map(t => <span key={t} className="bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded shadow-sm text-sm font-medium border border-gray-100 dark:border-gray-600">{t}</span>)}</div></div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 transition-colors duration-300">
+                    <header className="w-full max-w-4xl text-center mb-8 pt-4">
+                        <h1 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400 drop-shadow-sm tracking-tight mb-2">Föglölinjen</h1>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Tidtabell 2025</p>
+                    </header>
+                    <main className="w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-1 ring-gray-900/5 dark:ring-white/10 relative">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800/80 p-6 sm:p-8 flex flex-col items-center border-b border-gray-100 dark:border-gray-700">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold uppercase tracking-wider mb-4"><Anchor className="w-3 h-3" />{season.name}</div>
+                            <div className="flex flex-col items-center"><h2 className="text-5xl sm:text-6xl font-black text-gray-900 dark:text-white tracking-tighter tabular-nums">{timeString}</h2><p className="text-gray-500 dark:text-gray-400 font-medium mt-1 flex items-center gap-1.5"><Clock className="w-4 h-4" />{dateString}</p></div>
+                        </div>
+                        <div className="border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 sticky top-0 z-10">
+                            <nav className="flex divide-x divide-gray-100 dark:divide-gray-800">
+                                {[{ id: 'next', label: 'Nästa avgång', icon: Ship }, { id: 'today', label: 'Dagens avgångar', icon: Calendar }, { id: 'week', label: 'Turlista', icon: CalendarRange }].map((tab) => {
+                                    const isActive = activeTab === tab.id; const Icon = tab.icon;
+                                    return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 py-4 px-2 flex items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 ${isActive ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-[inset_0_-2px_0_0_#2563eb]' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}><Icon className={`w-4 h-4 ${isActive ? 'animate-pulse' : ''}`} /><span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.label.split(' ')[0]}</span></button>;
+                                })}
+                            </nav>
+                        </div>
+                        <div className="p-6 sm:p-8 bg-white dark:bg-gray-900 min-h-[400px]">
+                            {activeTab === 'next' && renderNext()}
+                            {activeTab === 'today' && renderDayView()}
+                            {activeTab === 'week' && renderWeek()}
+                        </div>
+                        {isOffline && <div className="absolute bottom-0 left-0 right-0 bg-gray-900/95 dark:bg-gray-100/95 text-white dark:text-gray-900 py-3 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 backdrop-blur-sm animate-slide-up"><WifiOff className="w-4 h-4" />Du är offline. Visar sparad tidtabell.</div>}
+                    </main>
+                    <footer className="mt-8 text-center px-4"><p className="text-xs text-gray-400 dark:text-gray-500">Svinö ↔ Degerby (Åland) • Tidtabell 2025</p><p className="text-[10px] text-gray-300 dark:text-gray-600 mt-2 max-w-md mx-auto">Ankomsttider är uppskattade (+30 min). Kontrollera alltid officiella källor vid dåligt väder.</p></footer>
+                </div>
+            );
+        }
+
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(err => console.log('SW failed', err));
+        });
+      }
+    </script>
+</body>
+</html>

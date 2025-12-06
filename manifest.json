@@ -1,0 +1,22 @@
+
+{
+  "name": "Föglölinjen 2025",
+  "short_name": "Föglö 25",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "description": "Tidtabell för färjetrafiken mellan Svinö och Degerby.",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/2563eb/ffffff/png?text=F%C3%B6gl%C3%B6",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/2563eb/ffffff/png?text=F%C3%B6gl%C3%B6",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
