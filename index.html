@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -61,7 +60,6 @@
 </script>
     <!-- Babel for in-browser compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <div id="root"></div>
@@ -70,7 +68,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect } from 'react';
         import ReactDOM from 'react-dom/client';
-        import { Clock, Calendar, Anchor, Ship, AlertCircle, ChevronLeft, ChevronRight, CalendarRange, WifiOff, Circle, MapPin, Share2, X, ArrowRight } from 'lucide-react';
+        import { Clock, Calendar, Anchor, Ship, AlertCircle, ChevronLeft, ChevronRight, CalendarRange, WifiOff, Circle, MapPin, Share2, X, ArrowRight, AlertTriangle } from 'lucide-react';
 
         // --- DATA SECTION ---
 
@@ -191,18 +189,40 @@
 
         // --- COMPONENTS SECTION ---
 
-        const DepartureCard = ({ time, isNext, label }) => {
+        const DepartureCard = ({ time, isNext, label, requiresBooking, bookingMessage }) => {
             const arrivalTime = calculateArrivalTime(time);
+            const [showTooltip, setShowTooltip] = React.useState(false);
+
             return (
-                <div className={`relative overflow-hidden p-4 rounded-xl flex justify-between items-center transition-all duration-300 shadow-sm gap-2 ${isNext ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 shadow-blue-200 dark:shadow-none' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700'}`}>
-                    {isNext && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
+                <div className={`relative overflow-visible p-4 rounded-xl flex justify-between items-center transition-all duration-300 shadow-sm gap-2 ${isNext ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 shadow-blue-200 dark:shadow-none' : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700'}`}>
+                    {isNext && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl"></div>}
                     <div className="flex flex-col min-w-[70px]">
                         <div className="flex items-center gap-1.5 mb-0.5">
                             <Circle className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                             <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Avgång</span>
                             {label && <span className="ml-1 text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/40 px-1.5 rounded-full uppercase tracking-wider">{label}</span>}
                         </div>
-                        <span className={`text-2xl font-bold tracking-tight ${isNext ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>{time}</span>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-2xl font-bold tracking-tight ${isNext ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>{time}</span>
+                            {requiresBooking && (
+                                <div className="relative">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setShowTooltip(!showTooltip); }}
+                                        onMouseEnter={() => setShowTooltip(true)}
+                                        onMouseLeave={() => setShowTooltip(false)}
+                                        className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800/60 transition-colors"
+                                    >
+                                        <AlertTriangle className="w-4 h-4" />
+                                    </button>
+                                    {showTooltip && (
+                                        <div className="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 w-48 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs p-2 rounded-lg shadow-xl z-50 text-center animate-fade-in">
+                                            {bookingMessage || "Trafikeras mot beställning."}
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-white"></div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="flex flex-col items-center justify-center px-2 pt-1 min-w-[60px]">
                         <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap mb-1 ${isNext ? 'text-blue-600/70 dark:text-blue-300/70' : 'text-gray-400 dark:text-gray-500'}`}>30 min</span>
@@ -228,13 +248,61 @@
                     </h3>
                     <div className="flex-1 space-y-3">
                         {departures.length > 0 ? (
-                            departures.map((dep, idx) => <DepartureCard key={`${dep.time}-${idx}`} time={dep.time} isNext={dep.isNext} label={dep.label} />)
+                            departures.map((dep, idx) => <DepartureCard key={`${dep.time}-${idx}`} time={dep.time} isNext={dep.isNext} label={dep.label} requiresBooking={dep.requiresBooking} bookingMessage={dep.bookingMessage} />)
                         ) : (
                             <div className="h-32 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-300 dark:border-gray-700">
                                 <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{emptyMessage || "Inga avgångar"}</p>
                             </div>
                         )}
                     </div>
+                </div>
+            );
+        };
+
+        // New component to handle tooltip state in the Week view (Bundled)
+        const WeekTimeSlot = ({ time, bookingMessage, index }) => {
+            const [showTooltip, setShowTooltip] = React.useState(false);
+
+            // Determine alignment based on column index (assuming 4 columns)
+            // Columns 0, 1: Tooltip shows on Right
+            // Columns 2, 3: Tooltip shows on Left
+            const colIndex = index % 4;
+            const showOnRight = colIndex < 2;
+
+            const requiresBooking = !!bookingMessage;
+
+            return (
+                <div 
+                    className={`relative py-2 rounded-lg text-center text-sm font-semibold transition-colors border 
+                    ${requiresBooking 
+                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 border-amber-100 dark:border-amber-800/50 cursor-pointer' 
+                        : 'bg-gray-50 dark:bg-gray-700/50 text-gray-800 dark:text-gray-200 border-transparent'
+                    } hover:border-blue-100 dark:hover:border-blue-800 select-none`}
+                    onClick={(e) => {
+                        if (requiresBooking) {
+                            e.stopPropagation();
+                            setShowTooltip(!showTooltip);
+                        }
+                    }}
+                    onMouseEnter={() => requiresBooking && setShowTooltip(true)}
+                    onMouseLeave={() => requiresBooking && setShowTooltip(false)}
+                >
+                    {time}
+                    {requiresBooking && (
+                        <React.Fragment>
+                            <div className="absolute -top-1 -right-1">
+                                <div className="bg-amber-500 text-white rounded-full p-0.5 shadow-sm">
+                                    <AlertTriangle className="w-2 h-2" />
+                                </div>
+                            </div>
+                            {showTooltip && (
+                                <div className={`absolute top-1/2 -translate-y-1/2 w-48 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs p-2 rounded-lg shadow-xl z-50 text-center animate-fade-in pointer-events-none ${showOnRight ? 'left-full ml-2' : 'right-full mr-2'}`}>
+                                    {bookingMessage}
+                                    <div className={`absolute top-1/2 -translate-y-1/2 border-4 border-transparent ${showOnRight ? 'right-full border-r-gray-900 dark:border-r-white' : 'left-full border-l-gray-900 dark:border-l-white'}`}></div>
+                                </div>
+                            )}
+                        </React.Fragment>
+                    )}
                 </div>
             );
         };
@@ -268,6 +336,23 @@
             const timeString = now.toTimeString().slice(0, 5);
             const dateString = formatDatePretty(now);
 
+            // Returns the booking message if required, otherwise null
+            const getBookingMessage = (time, dayOfWeek) => {
+                // Standard evening booking: 23:30 and 00:05 on all days EXCEPT Friday (5)
+                if ((time === '23:30' || time === '00:05') && dayOfWeek !== 5) {
+                    return "Trafikeras mot beställning till färjan senast kl. 21:30";
+                }
+                // Saturday Morning (Day 6): 06:15 and 06:50
+                if (dayOfWeek === 6 && (time === '06:15' || time === '06:50')) {
+                    return "Trafikeras mot beställning till färjan dagen före senast kl. 21:30.";
+                }
+                // Sunday Morning (Day 0): 06:30 and 07:10
+                if (dayOfWeek === 0 && (time === '06:30' || time === '07:10')) {
+                    return "Trafikeras mot beställning till färjan dagen före senast kl. 21:30.";
+                }
+                return null;
+            };
+
             const renderNext = () => {
                 const findNext = (routeKey) => {
                     const todayDeps = getUpcomingDepartures(routeKey, now);
@@ -281,7 +366,18 @@
 
                 const nextDegerby = findNext('degerby-svino');
                 const nextSvino = findNext('svino-degerby');
-                const createDepartureData = (data) => !data ? [] : [{ time: data.time, arrivalTime: '', isNext: true, label: data.label }];
+                const createDepartureDataWithMsg = (data) => {
+                    if (!data) return [];
+                    const msg = getBookingMessage(data.time, data.date.getDay());
+                    return [{ 
+                        time: data.time, 
+                        arrivalTime: '', 
+                        isNext: true, 
+                        label: data.label,
+                        requiresBooking: !!msg,
+                        bookingMessage: msg
+                    }];
+                };
 
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -319,7 +415,7 @@
                                 <RouteColumn 
                                     key={route.key}
                                     title={TIMETABLE[route.key].name} 
-                                    departures={createDepartureData(route.data)} 
+                                    departures={createDepartureDataWithMsg(route.data)} 
                                     emptyMessage="Inga fler avgångar hittades" 
                                 />
                             ))}
@@ -342,7 +438,16 @@
                     const allDeps = getDeparturesForDate(key, selectedDate);
                     let nextTime;
                     if (isToday) { const upcoming = getUpcomingDepartures(key, now); nextTime = upcoming[0]; }
-                    return allDeps.map(time => ({ time, arrivalTime: '', isNext: time === nextTime }));
+                    return allDeps.map(time => {
+                        const msg = getBookingMessage(time, selectedDate.getDay());
+                        return {
+                            time, 
+                            arrivalTime: '', 
+                            isNext: time === nextTime,
+                            requiresBooking: !!msg,
+                            bookingMessage: msg
+                        };
+                    });
                 };
 
                 const dateInputValue = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
@@ -394,9 +499,10 @@
                         {weekStructure.map(group => {
                             const degerbyDeps = TIMETABLE['degerby-svino'].seasons[currentSeasonKey][group.dayOfWeek] || [];
                             const svinoDeps = TIMETABLE['svino-degerby'].seasons[currentSeasonKey][group.dayOfWeek] || [];
+                            
                             return (
-                                <div key={group.title} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                                    <div className="bg-gray-50 dark:bg-gray-800/80 p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center">
+                                <div key={group.title} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                    <div className="bg-gray-50 dark:bg-gray-800/80 p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center rounded-t-2xl">
                                         <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">{group.title}</h3>
                                         {group.subtitle && <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">{group.subtitle}</span>}
                                     </div>
@@ -408,7 +514,22 @@
                                                 <ArrowRight className="w-4 h-4 text-gray-400 ml-auto md:hidden" />
                                             </div>
                                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-2">
-                                                {degerbyDeps.map(t => <div key={t} className="bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-800 dark:text-gray-200 py-2 rounded-lg text-center text-sm font-semibold transition-colors border border-transparent hover:border-blue-100 dark:hover:border-blue-800">{t}</div>)}
+                                                {degerbyDeps.map((t, idx) => {
+                                                    let bookingMsg = getBookingMessage(t, group.dayOfWeek);
+                                                    // Add extra info for week days if it's the evening tour
+                                                    if (group.title === 'Vardagar' && bookingMsg && (t === '23:30' || t === '00:05')) {
+                                                        bookingMsg += ". (Ordinarie tur på Fredagar)";
+                                                    }
+
+                                                    return (
+                                                        <WeekTimeSlot 
+                                                            key={t} 
+                                                            time={t} 
+                                                            bookingMessage={bookingMsg} 
+                                                            index={idx}
+                                                        />
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                         <div className="p-5">
@@ -417,7 +538,20 @@
                                                 <h4 className="font-semibold text-gray-700 dark:text-gray-200">Från Svinö</h4>
                                             </div>
                                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 gap-2">
-                                                {svinoDeps.map(t => <div key={t} className="bg-gray-50 dark:bg-gray-700/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-gray-800 dark:text-gray-200 py-2 rounded-lg text-center text-sm font-semibold transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800">{t}</div>)}
+                                                {svinoDeps.map((t, idx) => {
+                                                    let bookingMsg = getBookingMessage(t, group.dayOfWeek);
+                                                    if (group.title === 'Vardagar' && bookingMsg && (t === '23:30' || t === '00:05')) {
+                                                        bookingMsg += ". (Ordinarie tur på Fredagar)";
+                                                    }
+                                                    return (
+                                                        <WeekTimeSlot 
+                                                            key={t} 
+                                                            time={t} 
+                                                            bookingMessage={bookingMsg}
+                                                            index={idx}
+                                                        />
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -431,14 +565,16 @@
             return (
                 <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 transition-colors duration-300">
                     <header className="w-full max-w-4xl text-center mb-8 pt-4">
-                        <h1 className="text-4xl font-extrabold text-blue-600 dark:text-blue-400 drop-shadow-sm tracking-tight mb-2">Föglölinjen</h1>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-600 dark:text-blue-400 drop-shadow-sm tracking-tight mb-2">Föglölinjen</h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Tidtabell 2025</p>
                     </header>
+
                     <main className="w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden ring-1 ring-gray-900/5 dark:ring-white/10 relative">
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800/80 p-6 sm:p-8 flex flex-col items-center border-b border-gray-100 dark:border-gray-700">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold uppercase tracking-wider mb-4"><Anchor className="w-3 h-3" />{season.name}</div>
                             <div className="flex flex-col items-center"><h2 className="text-5xl sm:text-6xl font-black text-gray-900 dark:text-white tracking-tighter tabular-nums">{timeString}</h2><p className="text-gray-500 dark:text-gray-400 font-medium mt-1 flex items-center gap-1.5"><Clock className="w-4 h-4" />{dateString}</p></div>
                         </div>
+
                         <div className="border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 sticky top-0 z-10">
                             <nav className="flex divide-x divide-gray-100 dark:divide-gray-800">
                                 {[{ id: 'next', label: 'Nästa avgång', icon: Ship }, { id: 'today', label: 'Dagens avgångar', icon: Calendar }, { id: 'week', label: 'Turlista', icon: CalendarRange }].map((tab) => {
@@ -447,6 +583,7 @@
                                 })}
                             </nav>
                         </div>
+
                         <div className="p-6 sm:p-8 bg-white dark:bg-gray-900 min-h-[400px]">
                             {activeTab === 'next' && renderNext()}
                             {activeTab === 'today' && renderDayView()}
@@ -454,39 +591,19 @@
                         </div>
                         {isOffline && <div className="absolute bottom-0 left-0 right-0 bg-gray-900/95 dark:bg-gray-100/95 text-white dark:text-gray-900 py-3 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 backdrop-blur-sm animate-slide-up"><WifiOff className="w-4 h-4" />Du är offline. Visar sparad tidtabell.</div>}
                     </main>
+
                     <footer className="mt-8 text-center px-4 pb-8 space-y-4">
                         <p className="text-xs text-gray-400 dark:text-gray-500">Svinö ↔ Degerby (Åland) • Tidtabell 2025</p>
-                         <div className="flex justify-center">
-                            <button 
-                                onClick={() => setShowShare(true)} 
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 text-sm font-semibold shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                Dela appen
-                            </button>
-                        </div>
-                        <p className="text-[10px] text-gray-300 dark:text-gray-600 max-w-md mx-auto">Ankomsttider är uppskattade (+30 min). Kontrollera alltid officiella källor vid dåligt väder.</p>
+                         <div className="flex justify-center"><button onClick={() => setShowShare(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 text-sm font-semibold shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"><Share2 className="w-4 h-4" />Dela appen</button></div>
+                        <p className="text-[10px] text-gray-300 dark:text-gray-600 max-w-md mx-auto">M/S Skarven tel. +358 (0)401 733 600. Ålandstrafiken tel. +358 (0)18 25 600</p>
                     </footer>
                     {showShare && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowShare(false)}>
                             <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-2xl max-w-sm w-full text-center relative" onClick={e => e.stopPropagation()}>
-                                <button 
-                                    onClick={() => setShowShare(false)} 
-                                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    <X className="w-5 h-5 text-gray-500" />
-                                </button>
+                                <button onClick={() => setShowShare(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Dela appen</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-                                    Scanna QR-koden för att öppna tidtabellen i mobilen.
-                                </p>
-                                <div className="bg-white p-4 rounded-xl inline-block shadow-inner border border-gray-100 mb-4">
-                                    <img 
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&data=${encodeURIComponent(window.location.href)}`} 
-                                        alt="QR Code" 
-                                        className="w-48 h-48" 
-                                    />
-                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Scanna QR-koden för att öppna tidtabellen i mobilen.</p>
+                                <div className="bg-white p-4 rounded-xl inline-block shadow-inner border border-gray-100 mb-4"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=svg&data=${encodeURIComponent(window.location.href)}`} alt="QR Code" className="w-48 h-48" /></div>
                                 <p className="text-xs text-gray-400 break-all">{window.location.href}</p>
                             </div>
                         </div>
@@ -508,6 +625,5 @@
         });
       }
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
