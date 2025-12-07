@@ -1,9 +1,4 @@
-
-
-
-
-
-const CACHE_NAME = 'foglolinjen-v12';
+const CACHE_NAME = 'foglolinjen-v21';
 
 const PRECACHE_ASSETS = [
   './',
